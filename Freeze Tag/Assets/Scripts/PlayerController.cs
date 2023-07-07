@@ -23,6 +23,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private KeyCode jumpKey = KeyCode.Space;
     [SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
     [SerializeField] private KeyCode interactKey = KeyCode.Mouse0;
+    [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
+
+    [Header("Crouch Parameters'")]
+    [SerializeField] private float crouchSpeed = 1f;
+    [SerializeField] private float crouchYScale = .5f;
+    private Rigidbody playerRb;
+    private float startYScale;
+    bool isCrouching;
 
     [Header("Movement Parameters'")]
     [SerializeField] private float walkSpeed = 3f;
@@ -65,6 +73,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float walkBobAmount = 0.05f;
     [SerializeField] private float sprintBobSpeed = 18f;
     [SerializeField] private float sprintBobAmount = 0.1f;
+    [SerializeField] private float crouchBobSpeed = 18f;
+    [SerializeField] private float crouchBobAmount = 0.1f;
     private float defaultYPos = 0f;
     private float timer;
 
@@ -77,12 +87,13 @@ public class PlayerController : MonoBehaviour
     [Header("Footstep Parameters'")]
     [SerializeField] private float baseStepSpeed = 0.5f;
     [SerializeField] private float sprintStepSpeed = 0.6f;
+    [SerializeField] private float crouchStepSpeed = 1.5f;
     [SerializeField] private AudioSource footStepAudioSource = default;
     [SerializeField] private AudioClip[] concreateClips = default;
     [SerializeField] private AudioClip[] wetFloorClips = default;
     [SerializeField] private AudioClip[] MetalClips = default;
     private float footstepTimer = 0;
-    private float getCurrentOffset => IsSprinting ? baseStepSpeed * sprintStepSpeed : baseStepSpeed;
+    private float getCurrentOffset => isCrouching ? baseStepSpeed * crouchStepSpeed : IsSprinting ? baseStepSpeed * sprintStepSpeed : baseStepSpeed;
 
 
     // sliding parameters'
@@ -145,6 +156,12 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
     }
 
+    private void Start()
+    {
+        playerRb = GetComponent<Rigidbody>();
+        startYScale = transform.localScale.y;
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -161,6 +178,8 @@ public class PlayerController : MonoBehaviour
 
             if (canZoom)
                 HandleZoom();
+
+            HandleCrouch();
 
             if (canInteract)
             {
@@ -180,7 +199,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovementInput()
     {
-        currentInput = new Vector2((IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
+        currentInput = new Vector2((isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), (isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
         float moveDirectionY = moveDirection.y;
         moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
@@ -195,6 +214,22 @@ public class PlayerController : MonoBehaviour
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
     }
 
+    private void HandleCrouch()
+    {
+        if(Input.GetKeyDown(crouchKey) && characterController.isGrounded)
+        {
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            playerRb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+            isCrouching = true;
+        }
+
+        if(Input.GetKeyUp(crouchKey) && characterController.isGrounded)
+        {
+            transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+            isCrouching = false;
+        }
+    }
+
     private void HandleJump()
     {
         if (ShouldJump)
@@ -207,17 +242,17 @@ public class PlayerController : MonoBehaviour
 
         if (Mathf.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f)
         {
-            timer += Time.deltaTime * (IsSprinting ? sprintBobSpeed : walkBobSpeed);
+            timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
             playerCamera.transform.localPosition = new Vector3(
                 playerCamera.transform.localPosition.x,
-                defaultYPos + Mathf.Sin(timer) * (IsSprinting ? sprintBobAmount : walkBobAmount),
+                defaultYPos + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount),
                 playerCamera.transform.localRotation.z);
         }
     }
 
     private void HandleStamina()
     {
-        if (IsSprinting && currentInput != Vector2.zero)
+        if (IsSprinting && !isCrouching && currentInput != Vector2.zero)
         {
             if (regeneratingStamina != null)
             {

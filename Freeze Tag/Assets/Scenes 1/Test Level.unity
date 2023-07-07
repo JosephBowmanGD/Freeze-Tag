@@ -1222,7 +1222,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 392.7, y: -49.099976}
+  m_AnchoredPosition: {x: 392.7002, y: -49.100098}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &1643127970832596494
@@ -1285,7 +1285,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 169.18408, y: -49.099976}
+  m_AnchoredPosition: {x: 169.18408, y: -49.100098}
   m_SizeDelta: {x: 255.7682, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!33 &1707450521574125574
@@ -1790,7 +1790,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 141.29999, y: -98.89996}
+  m_AnchoredPosition: {x: 141.2998, y: -98.8999}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2939288723221801126
@@ -2435,7 +2435,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canSprint: 1
   canJump: 1
-  canCrouch: 1
   canDoHeadbob: 1
   willSlideOnSlopes: 1
   canZoom: 0
@@ -2444,17 +2443,18 @@ MonoBehaviour:
   useStamina: 1
   sprintKey: 304
   jumpKey: 32
-  crouchKey: 306
   zoomKey: 324
   interactKey: 323
+  crouchKey: 306
+  crouchSpeed: 1
+  crouchYScale: 0.5
   walkSpeed: 10
   sprintSpeed: 18
-  crouchingSpeed: 6
   slopeSpeed: 8
   maxHealth: 100
   timeBeforeStartRegenerating: 5
   healthValueIncrement: 1
-  healthtimeIncrement: 0.1
+  healthTimeIncrement: 0.1
   maxStamina: 10
   staminaUseMultiplier: 5
   timeBeforeStaminaRegenerating: 5
@@ -2466,22 +2466,13 @@ MonoBehaviour:
   lookLimitDN: 80
   jumpForce: 8
   gravity: 20
-  crouchHieght: 0.5
-  standingHeight: 2
-  timeTocrouch: 0.25
-  crouchingCenter: {x: 0, y: 0.5, z: 0}
-  standingCenter: {x: 0, y: 0, z: 0}
-  IsCrouching: 0
   walkBobSpeed: 14
   walkBobAmount: 0.05
   sprintBobSpeed: 18
   sprintBobAmount: 0.1
-  crouchBobSpeed: 8
-  crouchBobAmount: 0.025
   timeToZoom: 0.3
   zoomFOV: 30
   baseStepSpeed: 0.5
-  crouchStepSpeed: 1.5
   sprintStepSpeed: 0.6
   footStepAudioSource: {fileID: 0}
   concreateClips: []
@@ -2495,7 +2486,6 @@ MonoBehaviour:
     m_Bits: 0
   deathCamera: {fileID: 0}
   deathPanel: {fileID: 0}
-  RaycastLenght: 2
 --- !u!222 &3879402126870008341
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2819,6 +2809,7 @@ GameObject:
   - component: {fileID: 3244425106578676762}
   - component: {fileID: 3760360851891397935}
   - component: {fileID: 8451188163430842650}
+  - component: {fileID: 8451188163430842651}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -3605,7 +3596,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerSpeed: {fileID: 7134281282542298678}
-  isCrouching: {fileID: 51252207306697248}
   isSprinting: {fileID: 53027830684541742}
   playerController: {fileID: 3760360851891397935}
 --- !u!23 &6461164968490604277
@@ -4543,6 +4533,33 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &8451188163430842651
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4512726383096540670}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 1
 --- !u!23 &8588119387086569758
 MeshRenderer:
   m_ObjectHideFlags: 0
