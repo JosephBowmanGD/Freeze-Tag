@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -8,12 +7,10 @@ public class PlayerController : MonoBehaviour
     public bool CanMove { get; private set; } = true;
     public bool IsSprinting => canSprint && Input.GetKey(sprintKey);
     private bool ShouldJump => Input.GetKeyDown(jumpKey) && characterController.isGrounded;
-    private bool shouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAniomation && characterController.isGrounded;
 
     [Header("Functional Options")]
     [SerializeField] private bool canSprint = true;
     [SerializeField] private bool canJump = true;
-    [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canDoHeadbob = true;
     [SerializeField] private bool willSlideOnSlopes = true;
     [SerializeField] private bool canZoom = true;
@@ -24,96 +21,81 @@ public class PlayerController : MonoBehaviour
     [Header("Controls")]
     [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
     [SerializeField] private KeyCode jumpKey = KeyCode.Space;
-    [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
     [SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
     [SerializeField] private KeyCode interactKey = KeyCode.Mouse0;
 
-    [Header("Movement Parametres")]
+    [Header("Movement Parameters'")]
     [SerializeField] private float walkSpeed = 3f;
     [SerializeField] private float sprintSpeed = 8f;
-    [SerializeField] private float crouchingSpeed = 1f;
     [SerializeField] private float slopeSpeed = 8f;
 
-    [Header("Health Parametres")]
+    [Header("Health Parameters'")]
     [SerializeField] private float maxHealth = 100;
     [SerializeField] private float timeBeforeStartRegenerating = 5;
     [SerializeField] private float healthValueIncrement = 1;
-    [SerializeField] private float healthtimeIncrement = 0.1f;
+    [SerializeField] private float healthTimeIncrement = 0.1f;
     private float currentHealth;
     private Coroutine regeneratingHealth;
     public static Action<float> OnTakeDamage;
     public static Action<float> OnDamage;
     public static Action<float> OnHeal;
 
-    [Header("Stamina Parametres")]
+    [Header("Stamina Parameters'")]
     [SerializeField] private float maxStamina = 100;
     [SerializeField] private float staminaUseMultiplier = 5;
     [SerializeField] private float timeBeforeStaminaRegenerating = 5;
     [SerializeField] private float StaminaValueIncrement = 2;
     [SerializeField] private float StaminaTimeIncrement = 0.1f;
-    private float curentStamina;
-    private Coroutine regenaratingStamina;
+    private float currentStamina;
+    private Coroutine regeneratingStamina;
     public static Action<float> OnStaminaChange;
 
-    [Header("Look Parametres")]
+    [Header("Look Parameters'")]
     [SerializeField, Range(1, 10)] private float lookSpeedX = 2.0f;
     [SerializeField, Range(1, 10)] private float lookSpeedY = 2.0f;
     [SerializeField, Range(1, 180)] private float lookLimitUP = 80f;
     [SerializeField, Range(1, 180)] private float lookLimitDN = 80f;
 
-    [Header("Jump Parametres")]
+    [Header("Jump Parameters'")]
     [SerializeField] private float jumpForce = 8.0f;
     [SerializeField] private float gravity = 30f;
 
-    [Header("Crouch Parametres")]
-    [SerializeField] private float crouchHieght = 0.5f;
-    [SerializeField] private float standingHeight = 2f;
-    [SerializeField] private float timeTocrouch = 0.25f;
-    [SerializeField] private Vector3 crouchingCenter = new Vector3(0, 0.5f, 0);
-    [SerializeField] private Vector3 standingCenter = new Vector3(0, 0, 0);
-    public bool IsCrouching;
-    private bool duringCrouchAniomation;
-
-    [Header("Headbob Parametres")]
+    [Header("Headbob Parameters'")]
     [SerializeField] private float walkBobSpeed = 14f;
     [SerializeField] private float walkBobAmount = 0.05f;
     [SerializeField] private float sprintBobSpeed = 18f;
     [SerializeField] private float sprintBobAmount = 0.1f;
-    [SerializeField] private float crouchBobSpeed = 8f;
-    [SerializeField] private float crouchBobAmount = 0.025f;
     private float defaultYPos = 0f;
     private float timer;
 
-    [Header("Zoom Parametres")]
+    [Header("Zoom Parameters'")]
     [SerializeField] private float timeToZoom = 0.3f;
     [SerializeField] private float zoomFOV = 30f;
     private float defaultFov;
     private Coroutine zoomRoutine;
 
-    [Header("Footstep Parametres")]
+    [Header("Footstep Parameters'")]
     [SerializeField] private float baseStepSpeed = 0.5f;
-    [SerializeField] private float crouchStepSpeed = 1.5f;
     [SerializeField] private float sprintStepSpeed = 0.6f;
     [SerializeField] private AudioSource footStepAudioSource = default;
     [SerializeField] private AudioClip[] concreateClips = default;
     [SerializeField] private AudioClip[] wetFloorClips = default;
     [SerializeField] private AudioClip[] MetalClips = default;
     private float footstepTimer = 0;
-    private float getCurrentOffset => IsCrouching ? baseStepSpeed * crouchStepSpeed : IsSprinting ? baseStepSpeed * sprintStepSpeed : baseStepSpeed;
+    private float getCurrentOffset => IsSprinting ? baseStepSpeed * sprintStepSpeed : baseStepSpeed;
 
 
-    // sliding parametres
+    // sliding parameters'
     private Vector3 hitPointNormal;
-
     public Vector2 currentInput;
 
-    private bool IsSlliding
+    private bool IsSliding
     {
         get
         {
-            if (characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopehit, 2f))
+            if (characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f))
             {
-                hitPointNormal = slopehit.normal;
+                hitPointNormal = slopeHit.normal;
                 return Vector3.Angle(hitPointNormal, Vector3.up) > characterController.slopeLimit;
             }
             else
@@ -127,7 +109,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Vector3 interactionRayPoint = default;
     [SerializeField] private float interactionDistance = default;
     [SerializeField] private LayerMask interactionLayerMask = default;
-    private Interactables currentInteractible;
+    private Interactables currentInteractable;
 
     [Header("Game Objects")]
     private Camera playerCamera;
@@ -139,7 +121,6 @@ public class PlayerController : MonoBehaviour
     private Vector3 moveDirection;
 
     [Header("Float")]
-    [SerializeField] private float RaycastLenght = 2f;
     private float rotationX = 0f;
 
     private void OnEnable()
@@ -159,7 +140,7 @@ public class PlayerController : MonoBehaviour
         defaultYPos = playerCamera.transform.localPosition.y;
         defaultFov = playerCamera.fieldOfView;
         currentHealth = maxHealth;
-        curentStamina = maxStamina;
+        currentStamina = maxStamina;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -174,9 +155,6 @@ public class PlayerController : MonoBehaviour
 
             if (canJump)
                 HandleJump();
-
-            if (canCrouch)
-                HandleCrouch();
 
             if (canDoHeadbob)
                 HandleHeadBob();
@@ -196,13 +174,13 @@ public class PlayerController : MonoBehaviour
             if (useStamina)
                 HandleStamina();
 
-            ApplyFinalMovememts();
+            ApplyFinalMovements();
         }
     }
 
     private void HandleMovementInput()
     {
-        currentInput = new Vector2((IsCrouching ? crouchingSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsCrouching ? crouchingSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
+        currentInput = new Vector2((IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
         float moveDirectionY = moveDirection.y;
         moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
@@ -223,49 +201,43 @@ public class PlayerController : MonoBehaviour
             moveDirection.y = jumpForce;
     }
 
-    private void HandleCrouch()
-    {
-        if (shouldCrouch)
-            StartCoroutine(CrouchStand());
-    }
-
     private void HandleHeadBob()
     {
         if (!characterController.isGrounded) return;
 
         if (Mathf.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f)
         {
-            timer += Time.deltaTime * (IsCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
+            timer += Time.deltaTime * (IsSprinting ? sprintBobSpeed : walkBobSpeed);
             playerCamera.transform.localPosition = new Vector3(
                 playerCamera.transform.localPosition.x,
-                defaultYPos + Mathf.Sin(timer) * (IsCrouching ? crouchBobAmount : IsSprinting ? sprintBobAmount : walkBobAmount),
+                defaultYPos + Mathf.Sin(timer) * (IsSprinting ? sprintBobAmount : walkBobAmount),
                 playerCamera.transform.localRotation.z);
         }
     }
 
     private void HandleStamina()
     {
-        if (IsSprinting && !IsCrouching && currentInput != Vector2.zero)
+        if (IsSprinting && currentInput != Vector2.zero)
         {
-            if (regenaratingStamina != null)
+            if (regeneratingStamina != null)
             {
-                StopCoroutine(regenaratingStamina);
-                regenaratingStamina = null;
+                StopCoroutine(regeneratingStamina);
+                regeneratingStamina = null;
             }
 
-            curentStamina -= staminaUseMultiplier * Time.deltaTime;
+            currentStamina -= staminaUseMultiplier * Time.deltaTime;
 
-            if (curentStamina < 0)
-                curentStamina = 0;
+            if (currentStamina < 0)
+                currentStamina = 0;
 
-            OnStaminaChange?.Invoke(curentStamina);
+            OnStaminaChange?.Invoke(currentStamina);
 
-            if (curentStamina <= 0)
+            if (currentStamina <= 0)
                 canSprint = false;
         }
-        if (!IsSprinting && curentStamina < maxStamina && regenaratingStamina == null)
+        if (!IsSprinting && currentStamina < maxStamina && regeneratingStamina == null)
         {
-            regenaratingStamina = StartCoroutine(Regeneratestamina());
+            regeneratingStamina = StartCoroutine(RegenerateStamina());
         }
     }
 
@@ -297,26 +269,26 @@ public class PlayerController : MonoBehaviour
     {
         if (Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance))
         {
-            if (hit.collider.gameObject.layer == 6 && (currentInteractible == null || hit.collider.gameObject.GetInstanceID() != currentInteractible.GetInstanceID()))
+            if (hit.collider.gameObject.layer == 6 && (currentInteractable == null || hit.collider.gameObject.GetInstanceID() != currentInteractable.GetInstanceID()))
             {
-                hit.collider.TryGetComponent(out currentInteractible);
+                hit.collider.TryGetComponent(out currentInteractable);
 
-                if (currentInteractible)
-                    currentInteractible.OnFocus();
+                if (currentInteractable)
+                    currentInteractable.OnFocus();
             }
         }
-        else if (currentInteractible)
+        else if (currentInteractable)
         {
-            currentInteractible.OnLoseFocus();
-            currentInteractible = null;
+            currentInteractable.OnLoseFocus();
+            currentInteractable = null;
         }
     }
 
     private void HandleInteractionInput()
     {
-        if (Input.GetKeyDown(interactKey) && currentInteractible != null && Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance, interactionLayerMask))
+        if (Input.GetKeyDown(interactKey) && currentInteractable != null && Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance, interactionLayerMask))
         {
-            currentInteractible.OnInteract();
+            currentInteractable.OnInteract();
         }
     }
 
@@ -378,48 +350,18 @@ public class PlayerController : MonoBehaviour
         deathPanel.SetActive(true);
     }
 
-    private void ApplyFinalMovememts()
+    private void ApplyFinalMovements()
     {
         if (!characterController.isGrounded)
             moveDirection.y -= gravity * Time.deltaTime;
 
-        if (willSlideOnSlopes && IsSlliding)
+        if (willSlideOnSlopes && IsSliding)
             moveDirection += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
 
         characterController.Move(moveDirection * Time.deltaTime);
 
         if (characterController.velocity.y < -1 && characterController.isGrounded)
             moveDirection.y = 0;
-    }
-
-    private IEnumerator CrouchStand()
-    {
-        if (IsCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, RaycastLenght))
-        {
-            yield break;
-        }
-
-        duringCrouchAniomation = true;
-
-        float timeElapsed = 0;
-        float targetHieght = IsCrouching ? standingHeight : crouchHieght;
-        float currentHieght = characterController.height;
-        Vector3 targetCenter = IsCrouching ? standingCenter : crouchingCenter;
-        Vector3 currentCenter = characterController.center;
-
-        while (timeElapsed < timeTocrouch)
-        {
-            characterController.height = Mathf.Lerp(currentHieght, targetHieght, timeElapsed / timeTocrouch);
-            characterController.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeTocrouch);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        characterController.height = targetHieght;
-        characterController.center = targetCenter;
-
-        IsCrouching = !IsCrouching;
-        duringCrouchAniomation = false;
     }
 
     private IEnumerator ToggleZoom(bool isEnter)
@@ -442,7 +384,7 @@ public class PlayerController : MonoBehaviour
     private IEnumerator RegenHealth()
     {
         yield return new WaitForSeconds(timeBeforeStartRegenerating);
-        WaitForSeconds timeToWait = new WaitForSeconds(healthtimeIncrement);
+        WaitForSeconds timeToWait = new WaitForSeconds(healthTimeIncrement);
 
         while (currentHealth < maxHealth)
         {
@@ -458,26 +400,26 @@ public class PlayerController : MonoBehaviour
         regeneratingHealth = null;
     }
 
-    private IEnumerator Regeneratestamina()
+    private IEnumerator RegenerateStamina()
     {
         yield return new WaitForSeconds(timeBeforeStaminaRegenerating);
         WaitForSeconds timeToWait = new WaitForSeconds(StaminaTimeIncrement);
 
-        while (curentStamina < maxStamina)
+        while (currentStamina < maxStamina)
         {
-            if (curentStamina > 0)
+            if (currentStamina > 0)
                 canSprint = true;
 
-            curentStamina += StaminaValueIncrement;
+            currentStamina += StaminaValueIncrement;
 
-            if (curentStamina > maxStamina)
-                curentStamina = maxStamina;
+            if (currentStamina > maxStamina)
+                currentStamina = maxStamina;
 
-            OnStaminaChange?.Invoke(curentStamina);
+            OnStaminaChange?.Invoke(currentStamina);
 
             yield return timeToWait;
         }
 
-        regenaratingStamina = null;
+        regeneratingStamina = null;
     }
 }

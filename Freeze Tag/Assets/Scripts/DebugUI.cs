@@ -6,7 +6,6 @@ using UnityEngine;
 public class DebugUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerSpeed = default;
-    [SerializeField] private TextMeshProUGUI isCrouching = default;
     [SerializeField] private TextMeshProUGUI isSprinting = default;
 
     [SerializeField] private PlayerController playerController;
@@ -14,20 +13,7 @@ public class DebugUI : MonoBehaviour
     void Update()
     {
         SetSpeedValue();
-        SetCrouchValue();
         SetSprintValue();
-    }
-
-    void SetCrouchValue ()
-    {
-        if(playerController.IsCrouching)
-        {
-            isCrouching.text = "yes";
-        }
-        else
-        {
-            isCrouching.text = "no";
-        }
     }
 
     void SetSprintValue()
