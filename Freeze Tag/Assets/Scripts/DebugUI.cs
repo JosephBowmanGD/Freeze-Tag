@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -7,6 +5,7 @@ public class DebugUI : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerSpeed = default;
     [SerializeField] private TextMeshProUGUI isSprinting = default;
+    [SerializeField] private TextMeshProUGUI isCrouching = default;
 
     [SerializeField] private PlayerController playerController;
 
@@ -14,6 +13,7 @@ public class DebugUI : MonoBehaviour
     {
         SetSpeedValue();
         SetSprintValue();
+        SetCrouchValue();
     }
 
     void SetSprintValue()
@@ -25,6 +25,18 @@ public class DebugUI : MonoBehaviour
         else
         {
             isSprinting.text = "no";
+        }
+    }
+
+    void SetCrouchValue()
+    {
+        if (playerController.isCrouching)
+        {
+            isCrouching.text = "yes";
+        }
+        else
+        {
+            isCrouching.text = "no";
         }
     }
 

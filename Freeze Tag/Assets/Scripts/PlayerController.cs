@@ -8,12 +8,31 @@ public class PlayerController : MonoBehaviour
     public bool IsSprinting => canSprint && Input.GetKey(sprintKey);
     private bool ShouldJump => Input.GetKeyDown(jumpKey) && characterController.isGrounded;
 
+    public bool isCrouching;
+
+    private bool IsSliding
+    {
+        get
+        {
+            if (characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f))
+            {
+                hitPointNormal = slopeHit.normal;
+                return Vector3.Angle(hitPointNormal, Vector3.up) > characterController.slopeLimit;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
     [Header("Functional Options")]
     [SerializeField] private bool canSprint = true;
     [SerializeField] private bool canJump = true;
-    [SerializeField] private bool canDoHeadbob = true;
+    [SerializeField] private bool canDoHeadBob = true;
     [SerializeField] private bool willSlideOnSlopes = true;
     [SerializeField] private bool canZoom = true;
+    [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canInteract = true;
     [SerializeField] private bool useFootSteps = true;
     [SerializeField] private bool useStamina = true;
@@ -26,14 +45,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
 
     [Header("Crouch Parameters'")]
-    [SerializeField] private float crouchSpeed = 1f;
     [SerializeField] private float crouchYScale = .5f;
     private Rigidbody playerRb;
     private float startYScale;
-    bool isCrouching;
 
     [Header("Movement Parameters'")]
     [SerializeField] private float walkSpeed = 3f;
+    [SerializeField] private float crouchSpeed = 1f;
     [SerializeField] private float sprintSpeed = 8f;
     [SerializeField] private float slopeSpeed = 8f;
 
@@ -68,7 +86,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 8.0f;
     [SerializeField] private float gravity = 30f;
 
-    [Header("Headbob Parameters'")]
+    [Header("HeadBob Parameters'")]
     [SerializeField] private float walkBobSpeed = 14f;
     [SerializeField] private float walkBobAmount = 0.05f;
     [SerializeField] private float sprintBobSpeed = 18f;
@@ -95,26 +113,9 @@ public class PlayerController : MonoBehaviour
     private float footstepTimer = 0;
     private float getCurrentOffset => isCrouching ? baseStepSpeed * crouchStepSpeed : IsSprinting ? baseStepSpeed * sprintStepSpeed : baseStepSpeed;
 
-
-    // sliding parameters'
+    [Header("Sliding Parameters'")]
     private Vector3 hitPointNormal;
     public Vector2 currentInput;
-
-    private bool IsSliding
-    {
-        get
-        {
-            if (characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f))
-            {
-                hitPointNormal = slopeHit.normal;
-                return Vector3.Angle(hitPointNormal, Vector3.up) > characterController.slopeLimit;
-            }
-            else
-            {
-                return false;
-            }
-        }
-    }
 
     [Header("Interaction")]
     [SerializeField] private Vector3 interactionRayPoint = default;
@@ -131,7 +132,7 @@ public class PlayerController : MonoBehaviour
     [Header("Vectors")]
     private Vector3 moveDirection;
 
-    [Header("Float")]
+    [Header("Floats")]
     private float rotationX = 0f;
 
     private void OnEnable()
@@ -162,7 +163,6 @@ public class PlayerController : MonoBehaviour
         startYScale = transform.localScale.y;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (CanMove)
@@ -173,13 +173,14 @@ public class PlayerController : MonoBehaviour
             if (canJump)
                 HandleJump();
 
-            if (canDoHeadbob)
+            if (canDoHeadBob)
                 HandleHeadBob();
 
             if (canZoom)
                 HandleZoom();
 
-            HandleCrouch();
+            if (canCrouch)
+                HandleCrouch();
 
             if (canInteract)
             {
